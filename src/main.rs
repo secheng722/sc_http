@@ -1,6 +1,7 @@
 use std::io::{Read, Write};
 use std::net::{Shutdown, TcpListener, TcpStream};
-use std::thread;
+use std::{fs, thread};
+use std::fmt::format;
 use std::time::Duration;
 
 fn main() {
@@ -44,8 +45,27 @@ fn process_stream(mut stream: TcpStream) -> bool {
         return false;
     }
     println!("[Server][process_stream] Get Request Info : \"{}\"", String::from_utf8_lossy(&buffer[..]));
-    if !stream.write(b"Server has received your request ... ").is_ok() {
-        return false;
+    let get1=b"GET / HTTP/1.1\r\n";
+    let get2=b"GET /info HTTP/1.1\r\n";
+    if buffer.starts_with(get1) {
+        let content=fs::read_to_string("src/index.html").unwrap();
+        let response = format!(
+            "Http/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",content.len(),content
+        );
+        stream.write(response.as_bytes()).unwrap();
+    }else if buffer.starts_with(get2) {
+        let content=fs::read_to_string("src/info.html").unwrap();
+        let content = content.replace("{id}","1").replace("{name}","jack").replace("{gender}","male");
+        let response = format!(
+            "Http/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",content.len(),content
+        );
+        stream.write(response.as_bytes()).unwrap();
+    }else {
+        let content=fs::read_to_string("src/404.html").unwrap();
+        let response = format!(
+            "Http/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{}",content.len(),content
+        );
+        stream.write(response.as_bytes()).unwrap();
     }
     return true;
 }
