@@ -17,7 +17,6 @@ fn main() {
     });
     handle_client.join();
     handle_server.join();
-
 }
 
 fn worker_server() {
@@ -34,7 +33,7 @@ fn worker_server() {
             continue;
         }
         let mut stream = stream.unwrap();
-        //process stream
+        process_stream(stream);
         println!("[Server] : Waiting for next message ... ");
     }
 }
@@ -53,23 +52,22 @@ fn process_stream(mut stream: TcpStream) -> bool {
 
 fn worker_client() {
     let mut stream = TcpStream::connect("127.0.0.1:9528");
-    if !stream.is_ok(){
+    if !stream.is_ok() {
         println!("[Cliend] : Connect fail ... ");
         return;
     }
-    let mut stream=stream.unwrap();
-    let status=stream.write(b"client send info to server !");
-    if !status.is_ok(){
+    let mut stream = stream.unwrap();
+    let status = stream.write(b"client send info to server !");
+    if !status.is_ok() {
         println!("[Client] : Send info fail");
         return;
     }
-    let mut buffer=[0;1024];
-    let status=stream.read(&mut buffer);
+    let mut buffer = [0; 1024];
+    let status = stream.read(&mut buffer);
     if !status.is_ok() {
         println!("[Client] : Recv info fail ... ");
         return;
     }
-    println!("[Client] : Get msg from server \"{}\"",String::from_utf8_lossy(&buffer[..]));
+    println!("[Client] : Get msg from server \"{}\"", String::from_utf8_lossy(&buffer[..]));
     stream.shutdown(Shutdown::Both);
-
 }
